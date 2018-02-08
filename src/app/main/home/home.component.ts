@@ -14,6 +14,7 @@ import { ShowImageComponent } from "../../shared/show-image/show-image.component
   styleUrls: ["./home.component.scss"]
 })
 export class HomeComponent implements OnInit {
+
   constructor(
     private _userService: UserService,
     private _postservice: PostService,
@@ -23,23 +24,27 @@ export class HomeComponent implements OnInit {
     public dialog: MatDialog,
   ) {
     this._isDisabled = false;
+    this.getUserCredits();
   }
-  stars = 0;
-  posts = [];
-  credits = 0;
-  userData = null;
-  newstory = {};
-  following = 0;
-  followers = 0;
-  newstories = [];
-  showmore = false;
-  invitepeer = { email: "" };
+  stars                        = 0;
+  posts                        = [];
+  credits                      = 0;
+  userData                     = null;
+  newstory                     = {};
+  following                    = 0;
+  followers                    = 0;
+  newstories                   = [];
+  showmore                     = false;
+  invitepeer                   = { email: "" };
+
   private _postSavedSubscriber = EmitterService.get('postSaveEmitter');
-  private _limit      = 5;
-  private _offset     = 10;
+  private _limit               = 5;
+  private _offset              = 10;
+  private _isDisabled          = false;
+  private _counter             = 0;
   private _hasAddedPostCounter = 0;
-  private _isDisabled    = false;
-  private _counter = 0;
+  private _starsPercentage     = '';
+  private _btnLoadMoreText     = 'load more...'
 
   ngOnInit() {
     this.getUserInfo();
@@ -51,50 +56,52 @@ export class HomeComponent implements OnInit {
       $sticky.css({ position: "fixed", top: "86px" });
     }
 
-    this._accountservice.getusercredits().subscribe(resp => {
-      this.credits = resp['userCredits']['totalCredits'];
-      if (this.credits > 400) { this.stars = 5; }
-      else if (this.credits > 300) { this.stars = 4; }
-      else if (this.credits > 200) { this.stars = 3; }
-      else if (this.credits > 100) { this.stars = 2; }
-      else if (this.credits > 0) { this.stars = 1; }
-    }, error => {
-      console.log('Error retrieving User Credits');
-      console.log(error);
-    });
-
     const user = this._userService.getLoggedInUser();
-    this._authservice.getfollowers(user ? user.id : 0).subscribe(resp => {
-      if (resp['error'] === false) { this.followers = resp['followers'].length }
+    this._authservice.getfollowers(user ? user.id : 0).subscribe((response : any) => {
+    this.followers = response.followers.length;
     }, error => {
       console.log('Error Retrieving Followers');
       console.log(error);
     });
-    this._authservice.getfollowingusers(user ? user.id : 0).subscribe(resp => {
-      if (resp['error'] === false) { this.following = resp['followers'].length }
+    this._authservice.getfollowingusers(user ? user.id : 0).subscribe((response : any) => {
+      this.following = response.followers.length;
     }, error => {
       console.log(error);
     });
-    this._postservice.gettopstories().subscribe(resp => {
-      if (resp['error'] === false) {
-        this.newstories = resp['news'];
-      }
+    this._postservice.gettopstories().subscribe((response:any) => {
+        this.newstories = response.news;
     }, error => {
       console.log('Error Retrieving stories');
       console.log(error);
     });
   }
 
+getUserCredits() {
+  this._accountservice.getusercredits().subscribe((response: any) => {
+    this.credits = response.userCredits.totalCredits;
+
+    let result = (this.credits/  100) * 20;
+    if (result >= 100) { this.stars = 100; }
+    else { this.stars = result; }
+    this._starsPercentage= this.getStars(this.stars);
+
+  }, error => {
+    console.log('Error retrieving User Credits');
+    console.log(error);
+  });
+}
+  getStars(number) {
+    var val = parseFloat(number.toString());
+    return val + '%';
+  }
+
   /*Get User info then display name on the sidenav*/
   getUserInfo() {
-    let user = localStorage.getItem('user');
+    let user     = localStorage.getItem('user');
     let userInfo = JSON.parse(user);
-    let userId = userInfo.id;
-    this._accountservice.getUserInfo(userId).subscribe(response => {
-      this.userData = response['user'];
-      if (response['error'] === false) {
-        alert(response['Message']);
-      }
+    let userId   = userInfo.id;
+    this._accountservice.getUserInfo(userId).subscribe((response : any) => {
+      this.userData = response.user;
     }, error => {
       console.log(error);
     })
@@ -113,10 +120,8 @@ export class HomeComponent implements OnInit {
     $(e.currentTarget).find('.view_more').text(this.showmore ? 'View Less' : 'View More')
   }
   reloadnews() {
-    this._postservice.gettopstories().subscribe(resp => {
-      if (resp['error'] === false) {
-        this.newstories = resp["news"];
-      }
+    this._postservice.gettopstories().subscribe((response : any) => {
+        this.newstories = response.news;
     }, error => {
       console.log('Error Retrieving stories');
       console.log(error);
@@ -195,21 +200,19 @@ export class HomeComponent implements OnInit {
   loadMorePost() {
     /*Disable post button after submit to prevent post duplication*/
     this._isDisabled = true;
-    this._counter = this._hasAddedPostCounter;
+    this._counter    = this._hasAddedPostCounter;
+    this._offset     = this._offset + this._counter;
 
-    this._offset = this._offset + this._counter;
     this._postservice.getallposts(this._limit, this._offset).subscribe((response: any) => {
-      this._offset       = 5 + this._offset;
-      this._limit        = 5;
-      this.posts = this.posts.concat(response.posts);
+      this._offset              = 5 + this._offset;
+      this._limit               = 5;
+      this.posts                = this.posts.concat(response.posts);
       this._hasAddedPostCounter = 0;
-      console.log(this._hasAddedPostCounter, this._offset)
-      let responseLength = response.length;
-      if (response.posts.length > 0) {
-        this._isDisabled = false;
-      } else {
-        $('.btn-load-more-posts').text('No More Posts To Show');
-      }
+
+      let responseLength        = response.length;
+      if (response.posts.length > 0) { this._isDisabled = false; }
+      else {
+        this._btnLoadMoreText = 'No More Posts To Show'; }
     }, error => {
       // alert("Error Retrieving All Posts");
     })

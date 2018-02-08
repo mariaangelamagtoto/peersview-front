@@ -9,7 +9,11 @@
             <div class="top-info">
               <a class="user-img"><img src="/assets/images/profile-pic-lg.jpg" alt="Peersview" (click)="openAvatar()" /></a>
               <h3 class="user-name" *ngIf="userData"><a href="/my/profile"><span class="user-name"> {{userData.firstName}} {{userData.lastName}}</span></a></h3>
-              <div class="post-share "><i class="star" *ngFor="let i of [1,2,3,4,5]" [ngClass]="{ 'fill': stars > i-1 }"></i></div>
+              <div class="post-share">
+                <span class="stars" *ngIf="_starsPercentage">
+                  <span [style.width]="_starsPercentage"></span>
+                </span>
+              </div>
             </div>
             <div class="follow-box">
               <a routerLink="/followers-following">
@@ -105,7 +109,7 @@
             </div>
 
             <div class="load-more">
-              <button type="button" class="btn btn-load-more-posts" name="button" (click)="loadMorePost()" [disabled]="_isDisabled"><span class="no-more-post-to-show">load more...</span> </button>
+              <button type="button" class="btn btn-load-more-posts" name="button" (click)="loadMorePost()" [disabled]="_isDisabled"><span class="no-more-post-to-show"*ngIf="_btnLoadMoreText">{{_btnLoadMoreText}}</span> </button>
             </div>
           </div>
         </div>
