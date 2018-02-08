@@ -109,4 +109,7 @@ export class AccountSettingService {
     return this.http.get(`search?searchString='${searchkeyword}'`);
   }
 
+  searchInterests(searchkeyword: string) {
+    return this.http.get(`search/interests?keyword=${searchkeyword}`);
+  }
 }
