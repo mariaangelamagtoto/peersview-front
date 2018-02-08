@@ -4,20 +4,12 @@
     <div>
       <div class="form-group">
         <label>Search For More Interests</label>
-        <!-- <input type="text" class="form-control"> -->
-        <mat-form-field class="form-control">
-          <input matInput placeholder="What are your interest?" aria-label="Interest" [matAutocomplete]="reactiveAuto" (keydown)="searchInterests();" [(ngModel)]="interestKeyword">
-          <mat-autocomplete #reactiveAuto="matAutocomplete">
-            <mat-option (onSelectionChange)="addSelectedInterest(interest)" *ngFor="let interest of interests" [value]="interest.name">
-              <span>{{ interest.name }}</span>
-            </mat-option>
-          </mat-autocomplete>
-        </mat-form-field>
+        <input type="text" class="form-control">
       </div>
       <div class="form-group">
         <ul class="tags">
           <li *ngFor="let interest of this.userInterests">
-            <a (click)="onDelete(interest);">{{interest.interest ? interest.interest.name : interest.name}}<i class="delete-tag"></i>
+            <a (click)="onDelete(interest);">{{interest.interest.name}}<i class="delete-tag"></i>
             </a>
           </li>
         </ul>

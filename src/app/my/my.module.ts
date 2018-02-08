@@ -31,9 +31,6 @@ import {
 import {
   EditAccomplishmentsModalComponent
 } from './edit-accomplishments-modal/edit-accomplishments-modal.component';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import { MatFormFieldModule, MatInputModule } from '@angular/material';
 
 @NgModule({
   imports: [
@@ -42,12 +39,7 @@ import { MatFormFieldModule, MatInputModule } from '@angular/material';
     SharedModule,
     OwlModule,
     NgbTabsetModule.forRoot(),
-    NgbDropdownModule.forRoot(),
-    MatAutocompleteModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule
+    NgbDropdownModule.forRoot()
   ],
   declarations: [
     ClubListComponent,
