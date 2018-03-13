@@ -6,8 +6,14 @@ import {
   EmitterService
 } from '../../emitter/emitter.component';
 import {
-  PostModel
+  PostModel,
+  SharePostResponse,
+  CreatePost
 } from '../../../shared/models';
+import {
+  PostService
+} from '../../../../services/services';
+declare let swal: any;
 
 @Component({
   selector: 'shared-post-textarea-component',
@@ -16,21 +22,22 @@ import {
 })
 
 export class SharedPostTextareaComponent {
-  constructor () {}
+  constructor (private postService: PostService) {}
 
   protected toggleUploadComponent: boolean = false;
   protected post: PostModel = new PostModel();
-
+  private createPost: CreatePost = new CreatePost();
   private postAttachments: Array<object> = [];
   private uploadImagesEmitterService = EmitterService.get('uploadImagesEmitter');
   private uploadCompleteSubscriber = EmitterService.get('uploadCompleteEmitter');
+  private postSaveEmitterService = EmitterService.get('postSaveEmitter');
 
   public ngOnInit (): void {
     this.uploadComplete();
   }
 
   protected onAddPost (): void {
-    if (this.post.message) {
+    if (this.createPost.message) {
       if (this.toggleUploadComponent) {
         this.uploadImagesEmitterService.emit('saveImages');
       } else {
@@ -44,7 +51,6 @@ export class SharedPostTextareaComponent {
   private uploadComplete (): void {
     this.uploadCompleteSubscriber.subscribe(response => {
       this.postAttachments = response;
-
       if (response.length !== 0) {
         this.postWithAttachments();
       } else {
@@ -54,14 +60,25 @@ export class SharedPostTextareaComponent {
   }
 
   private postMessageOnly (): void {
-    console.log('data:', this.post.message);
-    console.log('run post api for message content only');
+    this.postService.createpost(this.createPost)
+    .subscribe((response: SharePostResponse) => {
+      this.postSaveEmitterService.emit(response.postId);
+    }, error => {
+      console.log(error);
+    });
   }
 
   private postWithAttachments (): void {
-    console.log('data:', this.post.message, this.postAttachments);
-    console.log('run post api with message and attachments');
+    this.createPost.attachments = this.postAttachments;
     this.toggleUploadComponent = false;
+    this.postService.createpost(this.createPost)
+    .subscribe((response: SharePostResponse) => {
+      this.postSaveEmitterService.emit(response.postId);
+      this.createPost.message = '';
+      this.createPost.attachments = [];
+    }, error => {
+      console.log(error);
+    });
   }
 
   protected onShowUploadComponent (): void {
@@ -70,6 +87,6 @@ export class SharedPostTextareaComponent {
 
   /*Destroy subscriber*/
   public ngOnDestroy (): void {
-    EmitterService.clear(['uploadCompleteEmitter']);
+    // EmitterService.clear(['uploadCompleteEmitter']);
   }
 }
